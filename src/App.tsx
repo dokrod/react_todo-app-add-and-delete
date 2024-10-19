@@ -1,26 +1,149 @@
-/* eslint-disable max-len */
-/* eslint-disable jsx-a11y/control-has-associated-label */
-import React from 'react';
-import { UserWarning } from './UserWarning';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import cn from 'classnames';
 
-const USER_ID = 0;
+import { Todo } from './types/Todo';
+import { ErrorType } from './types/ErrorType';
+import { FilterType } from './types/FilterType';
+
+import { UserWarning } from './UserWarning';
+import { getTodos, USER_ID } from './api/todos';
+
+import { handleDeleteTodo } from './utils/handleDeleteTodo';
+import { getFilteredTodos } from './utils/getFilteredTodo';
+
+import { TodoList } from './components/TodoList';
+import { Footer } from './components/Footer';
+import { Header } from './components/Header';
+import { TodoItem } from './components/TodoItem';
 
 export const App: React.FC = () => {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [tempTodo, setTempTodo] = useState<Todo | null>(null);
+  const [deletingTodoIds, setDeletingTodoIds] = useState<number[]>([]);
+  const [filter, setFilter] = useState(FilterType.all);
+  const [errorMessage, setErrorMessage] = useState<ErrorType>(
+    ErrorType.default,
+  );
+
+  const handleFilterChange = useCallback(
+    (filterBy: FilterType) => {
+      setFilter(filterBy);
+    },
+    [setFilter],
+  );
+
+  const filteredTodos = useMemo(
+    () => getFilteredTodos(todos, filter),
+    [todos, filter],
+  );
+
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleRemoveError = useCallback(() => {
+    setErrorMessage(ErrorType.default);
+  }, []);
+
+  const handleErrorMessage = useCallback(
+    (error: ErrorType) => {
+      setErrorMessage(error);
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        handleRemoveError();
+        timeoutRef.current = null;
+      }, 3000);
+    },
+    [handleRemoveError],
+  );
+
+  const handleTempTodo = useCallback(
+    (todo: Todo | null) => {
+      setTempTodo(todo);
+    },
+    [setTempTodo],
+  );
+
+  useEffect(() => {
+    handleDeleteTodo(
+      deletingTodoIds,
+      setTodos,
+      setDeletingTodoIds,
+      handleErrorMessage,
+    );
+  }, [deletingTodoIds, handleErrorMessage]);
+
+  useEffect(() => {
+    getTodos()
+      .then(setTodos)
+      .catch(() => handleErrorMessage(ErrorType.load));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (!USER_ID) {
     return <UserWarning />;
   }
 
   return (
-    <section className="section container">
-      <p className="title is-4">
-        Copy all you need from the prev task:
-        <br />
-        <a href="https://github.com/mate-academy/react_todo-app-loading-todos#react-todo-app-load-todos">
-          React Todo App - Load Todos
-        </a>
-      </p>
+    <div className="todoapp">
+      <h1 className="todoapp__title">todos</h1>
+      <div className="todoapp__content">
+        <Header
+          todos={todos}
+          setTodos={setTodos}
+          onError={handleErrorMessage}
+          setTempTodo={handleTempTodo}
+          tempTodo={tempTodo}
+        />
 
-      <p className="subtitle">Styles are already copied</p>
-    </section>
+        <TodoList
+          todos={filteredTodos}
+          deletingTodoIds={deletingTodoIds}
+          setDeletingTodoIds={setDeletingTodoIds}
+        />
+
+        {tempTodo && (
+          <TodoItem
+            todo={tempTodo}
+            deletingTodoIds={deletingTodoIds}
+            setDeletingTodoIds={setDeletingTodoIds}
+          />
+        )}
+
+        {!!todos.length && (
+          <Footer
+            filterBy={filter}
+            setFilter={handleFilterChange}
+            todos={todos}
+            setDeletingTodoIds={setDeletingTodoIds}
+          />
+        )}
+      </div>
+      <div
+        data-cy="ErrorNotification"
+        className={cn(
+          'notification is-danger is-light has-text-weight-normal',
+          {
+            hidden: errorMessage === ErrorType.default,
+          },
+        )}
+      >
+        <button
+          data-cy="HideErrorButton"
+          type="button"
+          className="delete"
+          onClick={handleRemoveError}
+        />
+        {errorMessage !== ErrorType.default && errorMessage}
+      </div>
+    </div>
   );
 };
