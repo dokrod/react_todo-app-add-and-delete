@@ -12,7 +12,7 @@ import { ErrorType } from './types/ErrorType';
 import { FilterType } from './types/FilterType';
 
 import { UserWarning } from './UserWarning';
-import { getTodos, USER_ID } from './api/todos';
+import { USER_ID } from './api/todos';
 
 import { handleDeleteTodo } from './utils/handleDeleteTodo';
 import { getFilteredTodos } from './utils/getFilteredTodo';
@@ -21,6 +21,7 @@ import { TodoList } from './components/TodoList';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { TodoItem } from './components/TodoItem';
+import { fetchTodos } from './utils/fetchTodos';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -28,7 +29,7 @@ export const App: React.FC = () => {
   const [deletingTodoIds, setDeletingTodoIds] = useState<number[]>([]);
   const [filter, setFilter] = useState(FilterType.all);
   const [errorMessage, setErrorMessage] = useState<ErrorType>(
-    ErrorType.default,
+    ErrorType.DEFAULT,
   );
 
   const handleFilterChange = useCallback(
@@ -46,7 +47,7 @@ export const App: React.FC = () => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleRemoveError = useCallback(() => {
-    setErrorMessage(ErrorType.default);
+    setErrorMessage(ErrorType.DEFAULT);
   }, []);
 
   const handleErrorMessage = useCallback(
@@ -82,9 +83,7 @@ export const App: React.FC = () => {
   }, [deletingTodoIds, handleErrorMessage]);
 
   useEffect(() => {
-    getTodos()
-      .then(setTodos)
-      .catch(() => handleErrorMessage(ErrorType.load));
+    fetchTodos(setTodos, handleErrorMessage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -132,7 +131,7 @@ export const App: React.FC = () => {
         className={cn(
           'notification is-danger is-light has-text-weight-normal',
           {
-            hidden: errorMessage === ErrorType.default,
+            hidden: errorMessage === ErrorType.DEFAULT,
           },
         )}
       >
@@ -142,7 +141,7 @@ export const App: React.FC = () => {
           className="delete"
           onClick={handleRemoveError}
         />
-        {errorMessage !== ErrorType.default && errorMessage}
+        {errorMessage !== ErrorType.DEFAULT && errorMessage}
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ export const handleDeleteTodo = (
         setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
       })
       .catch(() => {
-        handleErrorMessage(ErrorType.delete);
+        handleErrorMessage(ErrorType.DELETE);
       })
       .finally(() => {
         setDeletingTodoIds([]);

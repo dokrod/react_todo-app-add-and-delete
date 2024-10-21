@@ -28,7 +28,7 @@ export const Header: React.FC<Props> = ({
 
   const handleChangeTitle = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
-    onError(ErrorType.default);
+    onError(ErrorType.DEFAULT);
   };
 
   const reset = () => {
@@ -41,7 +41,7 @@ export const Header: React.FC<Props> = ({
     const normalizeTitle = title.trim();
 
     if (!normalizeTitle) {
-      onError(ErrorType.title);
+      onError(ErrorType.TITLE);
 
       return;
     }
@@ -61,7 +61,7 @@ export const Header: React.FC<Props> = ({
       setTodos(currentTodos => [...currentTodos, todo]);
       reset();
     } catch {
-      onError(ErrorType.add);
+      onError(ErrorType.ADD);
       setTempTodo(null);
     } finally {
       setTempTodo(null);
