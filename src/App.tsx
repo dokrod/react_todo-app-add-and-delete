@@ -5,7 +5,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import cn from 'classnames';
 
 import { Todo } from './types/Todo';
 import { ErrorType } from './types/ErrorType';
@@ -22,6 +21,7 @@ import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { TodoItem } from './components/TodoItem';
 import { fetchTodos } from './utils/fetchTodos';
+import { ErrorNotification } from './components/ErrorNotification';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -126,23 +126,10 @@ export const App: React.FC = () => {
           />
         )}
       </div>
-      <div
-        data-cy="ErrorNotification"
-        className={cn(
-          'notification is-danger is-light has-text-weight-normal',
-          {
-            hidden: errorMessage === ErrorType.DEFAULT,
-          },
-        )}
-      >
-        <button
-          data-cy="HideErrorButton"
-          type="button"
-          className="delete"
-          onClick={handleRemoveError}
-        />
-        {errorMessage !== ErrorType.DEFAULT && errorMessage}
-      </div>
+      <ErrorNotification
+        errorMessage={errorMessage}
+        handleRemoveError={handleRemoveError}
+      />
     </div>
   );
 };
